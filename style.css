@@ -1,0 +1,170 @@
+:root {
+  --bg-color: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --border-color: rgba(226, 232, 240, 0.8);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --card-shadow: 0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+  --card-shadow-hover: 0 12px 32px rgba(0,0,0,.12), 0 4px 12px rgba(0,0,0,.06);
+  
+  /* Dynamic Branding Colors */
+  --color-primary: #16a34a; /* Default Green */
+  --color-primary-light: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --color-primary-dim: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  --color-secondary: #0f172a; /* Default Dark */
+}
+
+.dark {
+  --bg-color: #020617;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: rgba(30, 41, 59, 0.8);
+  --glass-bg: rgba(15, 23, 42, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --card-shadow: 0 8px 24px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.2);
+  --card-shadow-hover: 0 12px 32px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.3);
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+  background-size: 32px 32px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Glass Card */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* Sidebar Custom Styling (Dark Gradient Mobile) */
+.mobile-sidebar-active {
+  background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+  color: #f8fafc;
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Interactive Elements */
+.nav-item {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 14px;
+}
+.nav-item:hover {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+.nav-item.active {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.submenu {
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+}
+.submenu.open {
+  max-height: 400px;
+  opacity: 1;
+}
+.submenu-item {
+  transition: all 0.2s ease;
+  border-radius: 10px;
+}
+.submenu-item:hover {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.feature-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.feature-btn:hover {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary-dim);
+}
+
+/* SVG Circle Progress */
+.circle-progress {
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Chart Canvas Container */
+.chart-container {
+  position: relative;
+  height: 380px;
+  width: 100%;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* SPA View Logic */
+.view-section {
+  display: none;
+  animation: fadeIn 0.3s ease-in-out;
+}
+.view-section.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Login Overlay & Utilities */
+#loginOverlay {
+  background: linear-gradient(135deg, #0f172a 0%, var(--color-primary-dim) 100%);
+  z-index: 100;
+  transition: opacity 0.5s ease-out;
+}
+
+.unselectable {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Profile Dropdown */
+#profileDropdown {
+  transform-origin: top right;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.95) translateY(-10px);
+}
+#profileDropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1) translateY(0);
+}

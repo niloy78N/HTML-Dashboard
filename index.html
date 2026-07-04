@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimLess Admin Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: { } // Colors are driven by CSS variables now
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="antialiased overflow-hidden flex h-screen selection:bg-[var(--color-primary)] selection:text-white">
+
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4">
+        <!-- Logo -->
+        <div class="mb-8 flex items-center justify-center gap-3">
+            <img id="loginLogoImg" src="" alt="Company Logo" class="h-12 w-auto hidden object-contain">
+            <div id="loginLogoSvg" class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-slate-900 flex items-center justify-center text-white shadow-xl">
+                    <i data-lucide="activity" class="w-7 h-7"></i>
+                </div>
+            </div>
+            <span id="loginCompanyName" class="font-display font-bold text-3xl tracking-tight text-white">SimLess</span>
+        </div>
+
+        <!-- Login Card -->
+        <div class="glass-card w-full max-w-md p-8 relative overflow-hidden bg-white/10 dark:bg-slate-900/40 border-white/20">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-primary)] to-green-300"></div>
+            
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-display font-bold text-white tracking-wide uppercase">Account Login</h2>
+                <p class="text-slate-300 text-sm mt-2">Enter your credentials to access the panel</p>
+            </div>
+
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
+                        </div>
+                        <input type="text" id="loginUsername" required class="block w-full pl-11 pr-4 py-3.5 bg-slate-800/50 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-all sm:text-sm backdrop-blur-sm" placeholder="Username">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="lock" class="w-5 h-5 text-slate-400"></i>
+                        </div>
+                        <input type="password" id="loginPassword" required class="block w-full pl-11 pr-4 py-3.5 bg-slate-800/50 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-all sm:text-sm backdrop-blur-sm" placeholder="Password">
+                    </div>
+                </div>
+
+                <!-- Math Captcha -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Solve Captcha</label>
+                    <div class="flex items-center gap-3">
+                        <div class="px-4 py-3 bg-slate-800/80 rounded-xl border border-slate-600/50 text-white font-bold tracking-widest text-lg w-32 text-center" id="captchaQuestion">? + ? =</div>
+                        <input type="number" id="loginCaptcha" required class="block w-full px-4 py-3 bg-slate-800/50 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-all sm:text-sm backdrop-blur-sm" placeholder="Answer">
+                    </div>
+                    <p id="loginError" class="text-red-400 text-sm mt-2 hidden text-center font-medium"></p>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-[var(--color-primary-dim)] text-sm font-bold text-white bg-[var(--color-primary)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-primary)] focus:ring-offset-slate-900 transition-all uppercase tracking-wider">
+                        Login
+                    </button>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="#" class="text-sm font-medium text-[var(--color-primary)] hover:text-green-400 transition-colors">Forgot Password?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 hidden opacity-0 transition-opacity duration-300 lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full lg:translate-x-0 lg:static flex-shrink-0 border-r border-[var(--border-color)] bg-[var(--glass-bg)] backdrop-blur-xl flex flex-col transition-all duration-300 shadow-2xl lg:shadow-none">
+        
+        <!-- Dynamic Logo Area -->
+        <div class="h-20 flex-shrink-0 flex items-center justify-between px-6 border-b border-[var(--border-color)] relative">
+            <div class="flex items-center gap-2 group cursor-pointer transition-all duration-300 px-3 py-2 -ml-3 rounded-2xl hover:bg-[var(--color-primary-light)] relative z-10" onclick="window.location.href='index.html'">
+                <!-- Logo Image (Hidden by default, shown via JS if uploaded) -->
+                <img id="brandLogoImg" src="" alt="Company Logo" class="h-8 w-auto hidden object-contain">
+                
+                <!-- SVG Fallback (SimLess style) -->
+                <div id="brandLogoSvg" class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-slate-900 flex items-center justify-center text-white shadow-lg">
+                        <i data-lucide="activity" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                
+                <!-- Dynamic Company Name -->
+                <span id="companyNameDisplay" class="ml-2 font-display font-bold text-xl tracking-tight text-[var(--text-primary)]"></span>
+            </div>
+            
+            <button id="sidebarCloseBtn" class="lg:hidden p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <!-- Dynamic Navigation Container -->
+        <nav id="sidebarNav" class="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
+            <!-- Populated by app.js -->
+        </nav>
+        
+        <!-- User Mini Profile -->
+        <div class="p-4 border-t border-[var(--border-color)]">
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-color)] border border-[var(--border-color)] transition-colors hover:border-[var(--color-primary)] cursor-pointer">
+                <div id="sidebarUserAvatarFallback" class="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-bold shadow-inner"></div>
+                <div class="flex-1 min-w-0">
+                    <p id="sidebarUserName" class="text-sm font-semibold truncate text-[var(--text-primary)]">Loading...</p>
+                    <p id="sidebarUserRole" class="text-xs text-[var(--text-secondary)] truncate">Connecting...</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        
+        <!-- Header -->
+        <header class="h-20 flex-shrink-0 flex items-center justify-between px-6 lg:px-10 border-b border-[var(--border-color)] bg-[var(--glass-bg)] backdrop-blur-xl z-20">
+            <div class="flex items-center gap-4">
+                <button id="mobileMenuBtn" class="lg:hidden p-2 -ml-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--color-primary-light)] transition-colors">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                
+                <!-- Header Logo -->
+                <img id="headerLogoImg" src="" alt="Header Logo" class="h-6 w-auto hidden object-contain">
+
+                <!-- Breadcrumb -->
+                <div class="hidden md:flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
+                    <a href="index.html" class="hover:text-[var(--color-primary)] transition-colors flex items-center gap-1">
+                        <i data-lucide="home" class="w-4 h-4"></i> Home
+                    </a>
+                    <i data-lucide="chevron-right" class="w-4 h-4 opacity-50"></i>
+                    <span class="text-[var(--text-primary)] font-semibold">Dashboard</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4 lg:gap-6">
+                <div class="hidden md:block mr-2">
+                    <p id="headerWelcomeText" class="text-sm font-semibold text-[var(--text-primary)] font-display tracking-wide">Loading...</p>
+                </div>
+
+                <div class="hidden sm:flex flex-col items-end border-l border-[var(--border-color)] pl-6">
+                    <span id="currentTime" class="text-sm font-bold text-[var(--text-primary)] font-display"></span>
+                    <span id="currentDate" class="text-xs text-[var(--text-secondary)]"></span>
+                </div>
+                
+                <button id="themeToggle" class="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--bg-color)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--color-primary)] transition-all shadow-sm">
+                    <i id="themeIcon" data-lucide="moon" class="w-5 h-5"></i>
+                </button>
+                
+                <div class="relative">
+                    <div class="flex items-center gap-2 cursor-pointer group" id="profileMenuBtn">
+                        <div class="w-10 h-10 rounded-full border-2 border-[var(--border-color)] group-hover:border-[var(--color-primary)] p-0.5 transition-colors shadow-sm">
+                            <div id="headerUserAvatarFallback" class="w-full h-full rounded-full bg-[var(--color-primary-dim)] text-[var(--color-primary)] flex items-center justify-center font-bold text-sm"></div>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors"></i>
+                    </div>
+                    
+                    <!-- Profile Dropdown -->
+                    <div id="profileDropdown" class="absolute right-0 mt-3 w-48 bg-[var(--bg-color)] rounded-xl border border-[var(--border-color)] shadow-xl z-50">
+                        <div class="px-3 py-2 border-b border-[var(--border-color)]">
+                            <span class="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">My Account</span>
+                        </div>
+                        <div class="p-2 space-y-1">
+                            <a href="#" onclick="App.switchView('view-my-activity')" class="flex items-center gap-2 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--color-primary-light)] rounded-lg transition-colors">
+                                <i data-lucide="activity" class="w-4 h-4"></i> My Activity
+                            </a>
+                            <a href="#" class="flex items-center gap-2 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--color-primary-light)] rounded-lg transition-colors">
+                                <i data-lucide="lock" class="w-4 h-4"></i> Change Password
+                            </a>
+                            <div class="border-t border-[var(--border-color)] my-1"></div>
+                            <a href="#" onclick="App.logout()" class="flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium">
+                                <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Scrollable Area -->
+        <main class="flex-1 overflow-y-auto p-6 lg:p-10 custom-scrollbar relative z-10">
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="max-w-7xl mx-auto space-y-8 view-section active">
+                
+                <!-- Feature Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
+                    <!-- Cards omitted for brevity, keeping same visual layout with generic colors -->
+                    <button onclick="App.switchView('view-dashboard')" class="glass-card feature-btn p-6 flex flex-col items-center justify-center gap-4 text-center group">
+                        <div class="w-14 h-14 rounded-2xl bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <i data-lucide="monitor" class="w-7 h-7"></i>
+                        </div>
+                        <span class="font-semibold text-sm text-[var(--text-primary)]">Dashboard</span>
+                    </button>
+                    <!-- ... Add 4 more similarly styled cards -->
+                     <button onclick="App.switchView('view-sms-ranges')" class="glass-card feature-btn p-6 flex flex-col items-center justify-center gap-4 text-center group">
+                        <div class="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <i data-lucide="hash" class="w-7 h-7"></i>
+                        </div>
+                        <span class="font-semibold text-sm text-[var(--text-primary)]">Ranges</span>
+                    </button>
+                    <button onclick="App.switchView('view-clients')" class="glass-card feature-btn p-6 flex flex-col items-center justify-center gap-4 text-center group">
+                        <div class="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-900/20 text-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <i data-lucide="users" class="w-7 h-7"></i>
+                        </div>
+                        <span class="font-semibold text-sm text-[var(--text-primary)]">Clients</span>
+                    </button>
+                    <button onclick="App.switchView('view-sms-cdr')" class="glass-card feature-btn p-6 flex flex-col items-center justify-center gap-4 text-center group">
+                        <div class="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <i data-lucide="pie-chart" class="w-7 h-7"></i>
+                        </div>
+                        <span class="font-semibold text-sm text-[var(--text-primary)]">Statistics</span>
+                    </button>
+                    <button onclick="App.switchView('view-my-numbers')" class="glass-card feature-btn p-6 flex flex-col items-center justify-center gap-4 text-center group col-span-2 md:col-span-1">
+                        <div class="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 text-[var(--text-secondary)] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <i data-lucide="smartphone" class="w-7 h-7"></i>
+                        </div>
+                        <span class="font-semibold text-sm text-[var(--text-primary)]">My Numbers</span>
+                    </button>
+                </div>
+
+                <!-- Mid Section: Stats + Chart + KPIs -->
+                <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
+                    
+                    <div class="xl:col-span-3 space-y-6 lg:space-y-8">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                            <!-- Stat 1 -->
+                            <div class="glass-card p-5 relative overflow-hidden group">
+                                <div class="flex justify-between items-start mb-2 relative z-10">
+                                    <div class="flex items-center gap-2 text-[var(--text-secondary)] font-medium text-sm">
+                                        <i data-lucide="bar-chart" class="w-4 h-4 text-[var(--color-primary)]"></i> Today SMS
+                                    </div>
+                                </div>
+                                <div class="text-3xl font-display font-bold text-[var(--color-primary)] mt-2 relative z-10 counter-value" id="statTodaySMS" data-target="0">0</div>
+                            </div>
+                            <!-- Stat 2 -->
+                            <div class="glass-card p-5 relative overflow-hidden group">
+                                <div class="flex justify-between items-start mb-2 relative z-10">
+                                    <div class="flex items-center gap-2 text-[var(--text-secondary)] font-medium text-sm">
+                                        <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-500"></i> SMS Yesterday
+                                    </div>
+                                </div>
+                                <div class="text-3xl font-display font-bold text-blue-500 mt-2 relative z-10 counter-value" id="statYesterdaySMS" data-target="0">0</div>
+                            </div>
+                            <!-- Stat 3 -->
+                            <div class="glass-card p-5 relative overflow-hidden group">
+                                <div class="flex justify-between items-start mb-2 relative z-10">
+                                    <div class="flex items-center gap-2 text-[var(--text-secondary)] font-medium text-sm">
+                                        <i data-lucide="activity" class="w-4 h-4 text-purple-500"></i> SMS This Week
+                                    </div>
+                                </div>
+                                <div class="text-3xl font-display font-bold text-purple-500 mt-2 relative z-10 counter-value" id="statThisWeekSMS" data-target="0">0</div>
+                            </div>
+                            <!-- Stat 4 -->
+                            <div class="glass-card p-5 relative overflow-hidden group">
+                                <div class="flex justify-between items-start mb-2 relative z-10">
+                                    <div class="flex items-center gap-2 text-[var(--text-secondary)] font-medium text-sm">
+                                        <i data-lucide="calendar" class="w-4 h-4 text-orange-500"></i> SMS This Month
+                                    </div>
+                                </div>
+                                <div class="text-3xl font-display font-bold text-orange-500 mt-2 relative z-10 counter-value" id="statThisMonthSMS" data-target="0">0</div>
+                            </div>
+                        </div>
+
+                        <!-- Chart Section -->
+                        <div class="glass-card p-6 lg:p-8">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="font-display font-bold text-lg text-[var(--text-primary)]">SMS Last 7 Days</h3>
+                            </div>
+                            <div class="chart-container relative">
+                                <div id="chartEmptyState" class="absolute inset-0 z-10 hidden flex-col items-center justify-center bg-[var(--glass-bg)] backdrop-blur-sm rounded-xl border border-dashed border-[var(--border-color)]">
+                                    <div class="w-16 h-16 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center mb-4">
+                                        <i data-lucide="bar-chart-3" class="w-8 h-8 text-[var(--color-primary)]"></i>
+                                    </div>
+                                    <p class="font-bold font-display text-lg text-[var(--text-primary)]">No SMS activity yet.</p>
+                                </div>
+                                <canvas id="smsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Side (KPIs) -->
+                    <div class="xl:col-span-1 flex flex-col gap-4 lg:gap-6">
+                        <!-- KPI 1 -->
+                        <div class="glass-card p-6 flex-1 flex items-center gap-6">
+                            <div class="relative w-20 h-20 flex-shrink-0 flex items-center justify-center">
+                                <svg class="w-full h-full transform -rotate-90">
+                                    <circle cx="40" cy="40" r="36" fill="transparent" stroke="currentColor" stroke-width="6" class="text-[var(--border-color)]" />
+                                    <circle cx="40" cy="40" r="36" fill="transparent" stroke="currentColor" stroke-width="6" class="text-orange-500 circle-progress" stroke-linecap="round" data-percent="0" id="kpiCircleNewAccounts" />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center"><i data-lucide="user-plus" class="w-6 h-6 text-orange-500"></i></div>
+                            </div>
+                            <div>
+                                <div class="text-3xl font-display font-bold text-[var(--text-primary)] counter-value" id="kpiNewAccounts" data-target="0">0</div>
+                                <div class="text-sm font-semibold text-orange-500 uppercase mt-1">New Accounts</div>
+                            </div>
+                        </div>
+                        <!-- KPI 2 & 3 similarly omitted for brevity, but retaining structure -->
+                        <div class="glass-card p-6 flex-1 flex items-center gap-6">
+                            <div class="relative w-20 h-20 flex-shrink-0 flex items-center justify-center">
+                                <svg class="w-full h-full transform -rotate-90">
+                                    <circle cx="40" cy="40" r="36" fill="transparent" stroke="currentColor" stroke-width="6" class="text-[var(--border-color)]" />
+                                    <circle cx="40" cy="40" r="36" fill="transparent" stroke="currentColor" stroke-width="6" class="text-blue-500 circle-progress" stroke-linecap="round" data-percent="0" id="kpiCircleNewNumbers" />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center"><i data-lucide="file-check-2" class="w-6 h-6 text-blue-500"></i></div>
+                            </div>
+                            <div>
+                                <div class="text-3xl font-display font-bold text-[var(--text-primary)] counter-value" id="kpiNewNumbers" data-target="0">0</div>
+                                <div class="text-sm font-semibold text-blue-500 uppercase mt-1">New Numbers</div>
+                            </div>
+                        </div>
+                        <div class="glass-card p-6 flex-1 flex items-center gap-6">
+                            <div class="relative w-20 h-20 flex-shrink-0 flex items-center justify-center">
+                                <svg class="w-full h-full transform -rotate-90">
+                                    <circle cx="40" cy="40" r="36" fill="transparent" stroke="currentColor" stroke-width="6" class="text-[var(--border-color)]" />
+                                    <circle cx="40" cy="40" r="36" fill="transparent" stroke="currentColor" stroke-width="6" class="text-[var(--color-primary)] circle-progress" stroke-linecap="round" data-percent="0" id="kpiCircleTodaySMS" />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center"><i data-lucide="check-circle-2" class="w-6 h-6 text-[var(--color-primary)]"></i></div>
+                            </div>
+                            <div>
+                                <div class="text-3xl font-display font-bold text-[var(--text-primary)] counter-value" id="kpiTodaySMS" data-target="0">0</div>
+                                <div class="text-sm font-semibold text-[var(--color-primary)] uppercase mt-1">Today SMS</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Tables Row -->
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 pb-10">
+                    <!-- Table 1 -->
+                    <div class="glass-card flex flex-col overflow-hidden">
+                        <div class="p-6 border-b border-[var(--border-color)] flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-[var(--color-primary-light)] flex items-center justify-center">
+                                <i data-lucide="megaphone" class="w-4 h-4 text-[var(--color-primary)]"></i>
+                            </div>
+                            <h3 class="font-display font-bold text-[var(--text-primary)] uppercase text-sm">News & Notifications</h3>
+                        </div>
+                        <table class="w-full text-left">
+                            <tbody id="newsTableBody"></tbody>
+                        </table>
+                    </div>
+                    <!-- Table 2 -->
+                    <div class="glass-card flex flex-col overflow-hidden">
+                        <div class="p-6 border-b border-[var(--border-color)] flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                                <i data-lucide="users" class="w-4 h-4 text-blue-500"></i>
+                            </div>
+                            <h3 class="font-display font-bold text-[var(--text-primary)] uppercase text-sm">Recent Clients</h3>
+                        </div>
+                        <table class="w-full text-left">
+                            <tbody id="clientsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Activity View -->
+            <div id="view-my-activity" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">My Activity</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="glass-card p-6 flex flex-col justify-center items-center">
+                        <div class="text-4xl font-display font-bold text-[var(--color-primary)] mb-2" id="totalLoginCount">0</div>
+                        <div class="text-sm font-medium text-[var(--text-secondary)] uppercase">Total Logins</div>
+                    </div>
+                    <div class="glass-card p-6 flex flex-col justify-center items-center text-center">
+                        <div class="text-lg font-bold text-[var(--text-primary)] mb-2">-</div>
+                        <div class="text-sm font-medium text-[var(--text-secondary)] uppercase">Last IP Address</div>
+                    </div>
+                    <div class="glass-card p-6 flex flex-col justify-center items-center text-center">
+                        <div class="text-lg font-bold text-[var(--text-primary)] mb-2">-</div>
+                        <div class="text-sm font-medium text-[var(--text-secondary)] uppercase">Last Device</div>
+                    </div>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)]">
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Time</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">IP Address</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Browser/OS</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityTableBody" class="divide-y divide-[var(--border-color)]">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SMS Test Panel View -->
+            <div id="view-sms-test" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">SMS Test Panel</h2>
+                    <p class="text-sm text-[var(--text-secondary)]">Live feed of incoming test OTPs</p>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)]">
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Time</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">App / Service</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Phone Number</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">OTP Code</th>
+                            </tr>
+                        </thead>
+                        <tbody id="smsTestTableBody" class="divide-y divide-[var(--border-color)]">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SMS CDR & Statistics View -->
+            <div id="view-sms-cdr" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">SMS CDR & Statistics</h2>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <thead>
+                                <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)]">
+                                    <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Time Received</th>
+                                    <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">App Name</th>
+                                    <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Country</th>
+                                    <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Phone Number</th>
+                                    <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Full OTP</th>
+                                    <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Status</th>
+                                    <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="smsCdrTableBody" class="divide-y divide-[var(--border-color)]">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Clients View -->
+            <div id="view-clients" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">My Clients</h2>
+                    <button onclick="App.openClientModal()" class="px-4 py-2 bg-[var(--color-primary)] text-white font-bold rounded-xl shadow-lg hover:opacity-90 flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Create Client
+                    </button>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)]">
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Client Name</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Username</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Password</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Balance</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Status</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="myClientsTableBody" class="divide-y divide-[var(--border-color)]">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Client Statistics View -->
+            <div id="view-client-stats" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">Client Statistics</h2>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                    <!-- Cards will be populated via JS -->
+                    <div class="glass-card p-6 flex flex-col justify-center items-center">
+                        <div class="text-3xl font-display font-bold text-[var(--color-primary)] mb-2" id="statTotalClientSms">0</div>
+                        <div class="text-sm font-medium text-[var(--text-secondary)] uppercase">Total Client SMS</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SMS Ranges View (Formerly view-numbers) -->
+            <div id="view-sms-ranges" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">SMS Ranges</h2>
+                    <div class="relative w-64">
+                        <input type="text" placeholder="Search countries..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] focus:outline-none focus:border-[var(--color-primary)]">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-[var(--text-secondary)]"></i>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="numbersGrid">
+                    <!-- Cards populated via JS -->
+                </div>
+            </div>
+
+            <!-- My Numbers View -->
+            <div id="view-my-numbers" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">My Assigned Numbers</h2>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)]">
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Number</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Country</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Assigned App</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Status</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="myNumbersTableBody" class="divide-y divide-[var(--border-color)]">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SMS RateCard View -->
+            <div id="view-sms-ratecard" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">SMS Rate Management</h2>
+                    <button id="addRateBtn" onclick="App.openRateModal()" class="px-4 py-2 bg-[var(--color-primary)] text-white font-bold rounded-xl shadow-lg hover:opacity-90 flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add New Rate
+                    </button>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)]">
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Country / Range</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Prefix</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Price per SMS</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Status</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="smsRateCardTableBody" class="divide-y divide-[var(--border-color)]">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Agent Management View -->
+            <div id="view-agent-management" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">Agent Management</h2>
+                    <button onclick="App.openCreateAgentModal()" class="px-4 py-2 bg-[var(--color-primary)] text-white font-bold rounded-xl shadow-lg hover:opacity-90 flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Create Agent
+                    </button>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)]">
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Agent Name</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Username</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Balance</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Credit Limit</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Status</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="agentMgmtTableBody" class="divide-y divide-[var(--border-color)]">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- App Management View -->
+            <div id="view-app-management" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">App Management</h2>
+                    <button onclick="App.openAppModal()" class="px-4 py-2 bg-[var(--color-primary)] text-white font-bold rounded-xl shadow-lg hover:opacity-90 flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add Application
+                    </button>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)]">
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">App Name</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Service Code</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Status</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appMgmtTableBody" class="divide-y divide-[var(--border-color)]">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- My Credit Notes View -->
+            <div id="view-credit-notes" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">My Credit Notes</h2>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                    <div class="glass-card p-6 flex flex-col justify-center items-center text-center">
+                        <div class="text-2xl font-display font-bold text-green-500 mb-2">$0.00</div>
+                        <div class="text-xs font-medium text-[var(--text-secondary)] uppercase">Earnings</div>
+                    </div>
+                    <div class="glass-card p-6 flex flex-col justify-center items-center text-center">
+                        <div class="text-2xl font-display font-bold text-blue-500 mb-2">$0.00</div>
+                        <div class="text-xs font-medium text-[var(--text-secondary)] uppercase">Credits</div>
+                    </div>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)]">
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Date</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Type</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Amount</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="creditNotesTableBody" class="divide-y divide-[var(--border-color)]">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Bulk Number Allocations View -->
+            <div id="view-bulk-allocations" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">Bulk Number Allocations</h2>
+                    <div class="relative w-64">
+                        <input type="text" placeholder="Search countries..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] focus:outline-none focus:border-[var(--color-primary)]">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-[var(--text-secondary)]"></i>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="bulkAllocationsGrid">
+                    <!-- Cards populated via JS -->
+                </div>
+            </div>
+
+            <!-- My Activity View -->
+            <div id="view-my-activity" class="max-w-7xl mx-auto space-y-8 view-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-display font-bold text-[var(--text-primary)]">My Activity</h2>
+                    <div class="glass-card px-4 py-2 flex items-center gap-3 border-[var(--color-primary)]/20">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-[var(--color-primary)]"></i>
+                        <span class="text-sm font-semibold text-[var(--text-primary)]">Total Logins: <span id="myTotalLogins" class="text-[var(--color-primary)]">0</span></span>
+                    </div>
+                </div>
+                
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)]">
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Timestamp</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">IP Address</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Device</th>
+                                <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Browser</th>
+                            </tr>
+                        </thead>
+                        <tbody id="myActivityTableBody" class="divide-y divide-[var(--border-color)]">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Agent Management Modals -->
+    <div id="createAgentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="glass-card w-full max-w-md p-6 bg-[var(--bg-color)] relative">
+            <h3 class="text-xl font-display font-bold text-[var(--text-primary)] mb-4">Create New Agent</h3>
+            <form id="createAgentForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Agent Name</label>
+                    <input type="text" id="agentName" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Username</label>
+                    <input type="text" id="agentUsername" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Password</label>
+                    <input type="text" id="agentPassword" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Starting Balance</label>
+                    <input type="number" step="0.01" id="agentBalance" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Credit Limit</label>
+                    <input type="number" step="0.01" id="agentCreditLimit" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Status</label>
+                    <select id="agentStatus" class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                        <option value="Active">Active</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 justify-end mt-6">
+                    <button type="button" onclick="App.closeModal('createAgentModal')" class="px-4 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-[var(--color-primary)] text-white font-bold rounded-xl shadow-lg hover:opacity-90">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="balanceModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="glass-card w-full max-w-sm p-6 bg-[var(--bg-color)] relative">
+            <h3 class="text-xl font-display font-bold text-[var(--text-primary)] mb-4" id="balanceModalTitle">Manage Balance</h3>
+            <form id="balanceForm" class="space-y-4">
+                <input type="hidden" id="balanceAgentUsername">
+                <input type="hidden" id="balanceActionType">
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Amount</label>
+                    <input type="number" step="0.01" id="balanceAmount" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                </div>
+                <div class="flex gap-3 justify-end mt-6">
+                    <button type="button" onclick="App.closeModal('balanceModal')" class="px-4 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-[var(--color-primary)] text-white font-bold rounded-xl shadow-lg hover:opacity-90">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="agentHistoryModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="glass-card w-full max-w-3xl p-6 bg-[var(--bg-color)] relative max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-display font-bold text-[var(--text-primary)]">Login History: <span id="historyAgentName" class="text-[var(--color-primary)]"></span></h3>
+                <button onclick="App.closeModal('agentHistoryModal')" class="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="overflow-y-auto custom-scrollbar flex-1">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)] sticky top-0">
+                            <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Time</th>
+                            <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">IP Address</th>
+                            <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Device</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agentHistoryTableBody" class="divide-y divide-[var(--border-color)]">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="transactionHistoryModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="glass-card w-full max-w-3xl p-6 bg-[var(--bg-color)] relative max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-display font-bold text-[var(--text-primary)]">Transactions: <span id="txHistoryAgentName" class="text-[var(--color-primary)]"></span></h3>
+                <button onclick="App.closeModal('transactionHistoryModal')" class="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="overflow-y-auto custom-scrollbar flex-1">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)] sticky top-0">
+                            <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Time</th>
+                            <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Action</th>
+                            <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Amount</th>
+                            <th class="p-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">By</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionHistoryTableBody" class="divide-y divide-[var(--border-color)]">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Management Modals -->
+    <div id="clientModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="glass-card w-full max-w-md p-6 bg-[var(--bg-color)] relative">
+            <h3 id="clientModalTitle" class="text-xl font-display font-bold text-[var(--text-primary)] mb-4">Create New Client</h3>
+            <form id="clientForm" class="space-y-4">
+                <input type="hidden" id="clientActionType" value="create">
+                <input type="hidden" id="clientOriginalUsername" value="">
+                
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Client Name</label>
+                    <input type="text" id="clientName" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Username</label>
+                    <input type="text" id="clientUsername" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Password</label>
+                    <input type="text" id="clientPassword" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Balance</label>
+                    <input type="number" id="clientBalance" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]" value="0">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Status</label>
+                    <select id="clientStatus" class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                        <option value="Active">Active</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="App.closeModal('clientModal')" class="flex-1 py-3 px-4 border border-[var(--border-color)] text-[var(--text-secondary)] font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 px-4 bg-[var(--color-primary)] text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition-opacity">Save Client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Client Statistics Modal -->
+    <div id="clientStatsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="glass-card w-full max-w-2xl p-6 bg-[var(--bg-color)] relative max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-display font-bold text-[var(--text-primary)]">Statistics: <span id="statsClientName" class="text-[var(--color-primary)]"></span></h3>
+                <button onclick="App.closeModal('clientStatsModal')" class="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-center">
+                    <div class="text-2xl font-display font-bold text-[var(--color-primary)]" id="statsTotalSms">0</div>
+                    <div class="text-xs font-medium text-[var(--text-secondary)] uppercase mt-1">Total SMS</div>
+                </div>
+                <div class="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-center">
+                    <div class="text-2xl font-display font-bold text-[var(--color-primary)]" id="statsDailySms">0</div>
+                    <div class="text-xs font-medium text-[var(--text-secondary)] uppercase mt-1">Daily SMS</div>
+                </div>
+                <div class="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-center">
+                    <div class="text-2xl font-display font-bold text-[var(--color-primary)]" id="statsMonthlySms">0</div>
+                    <div class="text-xs font-medium text-[var(--text-secondary)] uppercase mt-1">Monthly SMS</div>
+                </div>
+            </div>
+            
+            <h4 class="text-sm font-bold text-[var(--text-primary)] uppercase mb-3">Country Usage Breakdown</h4>
+            <div class="overflow-y-auto custom-scrollbar flex-1 border border-[var(--border-color)] rounded-xl">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-[var(--border-color)] bg-[var(--bg-color)] sticky top-0">
+                            <th class="p-3 text-xs font-bold text-[var(--text-secondary)] uppercase">Country</th>
+                            <th class="p-3 text-xs font-bold text-[var(--text-secondary)] uppercase text-right">SMS Count</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsCountryTableBody" class="divide-y divide-[var(--border-color)]">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SMS Rate Modal -->
+    <div id="rateModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="glass-card w-full max-w-md p-6 bg-[var(--bg-color)] relative">
+            <h3 id="rateModalTitle" class="text-xl font-display font-bold text-[var(--text-primary)] mb-4">Add New Rate</h3>
+            <form id="rateForm" class="space-y-4">
+                <input type="hidden" id="rateId">
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Country Name</label>
+                    <input type="text" id="rateCountry" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]" placeholder="e.g. United Kingdom">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Prefix</label>
+                    <input type="text" id="ratePrefix" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]" placeholder="e.g. 44">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Price per SMS</label>
+                    <input type="number" step="0.001" id="ratePrice" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]" placeholder="0.05">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Status</label>
+                    <select id="rateStatus" class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                        <option value="Active">Active</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 justify-end mt-6">
+                    <button type="button" onclick="App.closeModal('rateModal')" class="px-4 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-[var(--color-primary)] text-white font-bold rounded-xl shadow-lg hover:opacity-90">Save Rate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- App Modal -->
+    <div id="appModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="glass-card w-full max-w-md p-6 bg-[var(--bg-color)] relative">
+            <h3 id="appModalTitle" class="text-xl font-display font-bold text-[var(--text-primary)] mb-4">Add New Application</h3>
+            <form id="appForm" class="space-y-4">
+                <input type="hidden" id="appOriginalCode" value="">
+                <input type="hidden" id="appActionType" value="create">
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">App Name</label>
+                    <input type="text" id="appName" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]" placeholder="e.g. Service Platform">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Service Code</label>
+                    <input type="text" id="appCode" required class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]" placeholder="e.g. SRV01">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1">Status</label>
+                    <select id="appStatus" class="w-full px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--color-primary)]">
+                        <option value="Active">Active</option>
+                        <option value="Disabled">Disabled</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="App.closeModal('appModal')" class="flex-1 py-3 px-4 border border-[var(--border-color)] text-[var(--text-secondary)] font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 px-4 bg-[var(--color-primary)] text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition-opacity">Save App</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
